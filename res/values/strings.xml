@@ -4,5 +4,18 @@
     <string name="hello">Welcome to QRcode Race!</string>
     <string name="app_name">Qrcode-race</string>
     <string name="desc">CS World</string>
+    <string name="about">QRcode Race is a traditional game in KAIST CS department for sports day event.</string>
+    <string-array name="test">
+        <item> 1</item>
+        <item> 2</item>
+        <item> 3</item>
+        <item> 4</item>
+        <item> 5</item>
+        <item> 6</item>
+        <item> 7</item>
+        <item> 8</item>
+        <item> 9</item>
+        <item> 0</item>
+    </string-array>
 
 </resources>
