@@ -1,83 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
-	<FrameLayout
-    	android:layout_width="fill_parent"
-    	android:layout_height="match_parent"
-    	android:layout_weight="0.2"
-    	android:orientation="horizontal">
-    	<ImageView
-        	android:id="@+id/worldMap"
-        	android:layout_width="fill_parent"
-        	android:layout_height="match_parent"
-	        android:contentDescription="@string/desc"
-    	    android:src="@drawable/ic_launcher" />
-    	<TextView
-    	    android:id="@+id/about"
-    	    android:layout_width="fill_parent"
-    	    android:layout_height="match_parent"
-    	    android:visibility="invisible" 
-    	    android:text="@string/about" />
-   		<ListView 
-		    android:id="@+id/remain"
-   	    	android:layout_width="fill_parent"
-   	    	android:layout_height="match_parent"
-   	    	android:visibility="invisible"
-   	    	/>
-  		<ListView 
-		    android:id="@+id/solved"
-   	    	android:layout_width="fill_parent"
-   	    	android:layout_height="match_parent"
-   	    	android:visibility="invisible"
-   	    	/>
-   		<ListView 
-		    android:id="@+id/setting"
-   	    	android:layout_width="fill_parent"
-   	    	android:layout_height="match_parent"
-   	    	android:visibility="invisible"
-   	    	/>
-	</FrameLayout>
-	
-	<LinearLayout
-    	android:layout_width="fill_parent"
-    	android:layout_height="match_parent"
-		android:layout_weight="1"
-		android:padding="0dp"
-    	android:orientation="horizontal">
-		<Button
-		    android:id="@+id/aboutbutton"
-		    android:layout_width="match_parent"
-		    android:layout_height="match_parent"
-		    android:layout_weight="1"
-		    android:padding="0dp"
-		    android:text="about"
-		    />
-		<Button
-		    android:id="@+id/remainbutton"
-		    android:layout_width="match_parent"
-		    android:layout_height="match_parent"
-		    android:layout_weight="1"
-		    android:padding="0dp"
-		    android:text="remain"
-		    />
-		<Button
-		    android:id="@+id/solvedbutton"
-		    android:layout_width="match_parent"
-		    android:layout_height="match_parent"
-		    android:layout_weight="1"
-		    android:padding="0dp"
-		    android:text="solved"
-		    />
-		<Button
-		    android:id="@+id/settingbutton"
-		    android:layout_width="match_parent"
-		    android:layout_height="match_parent"
-		    android:layout_weight="1"
-		    android:padding="0dp"
-		    android:text="setting" 
-		    />
-    </LinearLayout>
-    
-</LinearLayout>
+<TabHost xmlns:android="http://schemas.android.com/apk/res/android" 
+   android:id="@android:id/tabhost" 
+   android:layout_width="fill_parent" 
+   android:layout_height="fill_parent" xmlns:android1="http://schemas.android.com/apk/res/android"> 
+   <LinearLayout 
+       android:orientation="vertical" 
+       android:layout_width="fill_parent" 
+       android:layout_height="fill_parent"> 
+       <TabWidget 
+           android:id="@android:id/tabs" 
+           android:layout_width="fill_parent" 
+           android:layout_height="wrap_content" /> 
+       <FrameLayout 
+           	android:id="@android:id/tabcontent" 
+           	android:layout_width="fill_parent" 
+           	android:layout_height="fill_parent">
+           
+           	<ImageView
+        		android:id="@+id/worldmap"
+        		android:layout_width="fill_parent"
+        		android:layout_height="fill_parent"
+	        	android:contentDescription="@string/desc"
+    	    	android:src="@drawable/ic_launcher" />
+ 
+           	<TextView
+      	        android:id="@+id/about"
+        		android:layout_width="fill_parent"
+        		android:layout_height="fill_parent"
+	        	android:text="@string/about"
+               	/>
+           	
+			<ListView 
+               android:id="@+id/remain" 
+               android:layout_width="fill_parent" 
+               android:layout_height="fill_parent" />
+           	<ListView 
+               android:id="@+id/solved" 
+               android:layout_width="fill_parent" 
+               android:layout_height="fill_parent" />
+			<ListView 
+               android:id="@+id/setting" 
+               android:layout_width="fill_parent" 
+               android:layout_height="fill_parent" />
+       </FrameLayout> 
+   </LinearLayout> 
+</TabHost> 
+ 
