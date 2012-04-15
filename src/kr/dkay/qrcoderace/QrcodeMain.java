@@ -5,10 +5,22 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.net.HttpURLConnection;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.Vector;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
 
 
 import android.app.AlertDialog;
@@ -20,6 +32,10 @@ import android.content.res.Resources;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -44,7 +60,15 @@ public class QrcodeMain extends TabActivity {
 	private Double myLat;
 	private Double myLng;
 	private String myTeam = "test";
+	private Context cont = this;
 	
+	private String message;
+	private String deviceID;
+	private String version;
+	private String infotype;
+
+	LocationManager lManager;
+	LocationListener lListener;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -98,17 +122,18 @@ public class QrcodeMain extends TabActivity {
                 R.layout.listview_layout_probs,
                 settingList));
         
+        getMyLocation();
         
-        HttpPostData();
+        
         ImageView.OnClickListener adapter = new ImageView.OnClickListener() {
         	@Override
         	public void onClick(View v){
-        		HttpPostData();
+        		lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
+            	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
         	}
         };
         worldMap.setOnClickListener(adapter);
-        
-        
+    
     }
     
     @Override
@@ -150,68 +175,22 @@ public class QrcodeMain extends TabActivity {
         	Log.i("Test"," isTwoClickBack " + isTwoClickBack);
         }
     }//class CntTimer
+   
     
-    void HttpPostData() {
+    
+    
+    private boolean getMyLocation(){
+    	WifiManager wManage = (WifiManager)getSystemService(WIFI_SERVICE);
+        WifiInfo wInfo = wManage.getConnectionInfo();
+        deviceID = wInfo.getMacAddress();
+    	version = Build.ID;
     	
-    	if(!getMyLocation()){
-    		Toast.makeText(this, "No GPS Information", 0).show();
-    		return;
-    	}
-        try {
-             //--------------------------
-             //   URL 설정하고 접속하기
-             //--------------------------
-             URL url = new URL("http://drama.kaist.ac.kr/qr/getLocation.php");       // URL 설정
-             HttpURLConnection http = (HttpURLConnection) url.openConnection();   // 접속
-             //--------------------------
-             //   전송 모드 설정 - 기본적인 설정이다
-             //--------------------------
-             http.setDefaultUseCaches(false);                                           
-             http.setDoInput(true);                         // 서버에서 읽기 모드 지정
-             http.setDoOutput(true);                       // 서버로 쓰기 모드 지정 
-             http.setRequestMethod("POST");         // 전송 방식은 POST
-
-             // 서버에게 웹에서 <Form>으로 값이 넘어온 것과 같은 방식으로 처리하라는 걸 알려준다
-             http.setRequestProperty("content-type", "application/x-www-form-urlencoded");
-             //--------------------------
-             //   서버로 값 전송
-             //--------------------------
-             StringBuffer buffer = new StringBuffer();
-             buffer.append("lat").append("=").append(myLat).append("&");
-             buffer.append("long").append("=").append(myLng).append("&");
-             buffer.append("team").append("=").append(myTeam);
-             
-             OutputStreamWriter outStream = new OutputStreamWriter(http.getOutputStream(), "EUC-KR");
-             PrintWriter writer = new PrintWriter(outStream);
-             writer.write(buffer.toString());
-             writer.flush();
-             //--------------------------
-             //   서버에서 전송받기
-             //--------------------------
-             InputStreamReader tmp = new InputStreamReader(http.getInputStream(), "EUC-KR"); 
-             BufferedReader reader = new BufferedReader(tmp);
-             StringBuilder builder = new StringBuilder();
-             String str;
-             while ((str = reader.readLine()) != null) {       // 서버에서 라인단위로 보내줄 것이므로 라인단위로 읽는다
-                  builder.append(str + "\n");                     // View에 표시하기 위해 라인 구분자 추가
-             }
-             
-             String myResult = builder.toString();                       // 전송결과를 전역 변수에 저장
-             Toast.makeText(this, myResult, 0).show();
-        } catch (MalformedURLException e) {
-               //
-        } catch (IOException e) {
-               // 
-        } // try
-   } // HttpPostData
-    
-    
-    private boolean getMyLocation(){     
-    	LocationManager myLocationManager;
-    	LocationListener myLocationListener;
     	//GPS가 켜져있는지 확인한다.
-    	myLocationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-    	Location loc = myLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+    	lManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+
+    	Location loc = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+    	
+    	
     	if(loc == null)
     	{
     		Log.i("Worldmap", "GPS OFF");
@@ -233,8 +212,9 @@ public class QrcodeMain extends TabActivity {
     		gsDialog.create().show();
     		return false;
     	}
-
-    	myLocationListener = new LocationListener() {
+    	
+    	
+    	lListener = new LocationListener() {
     		@Override
     			public void onStatusChanged(String provider, int status, Bundle extras) {
     			}
@@ -247,26 +227,74 @@ public class QrcodeMain extends TabActivity {
     		//위치 정보가 변경 됐을 때 위치 정보를 가져온다.
     		@Override
     			public void onLocationChanged(Location location) {
-    				Log.i("HONEYMAP","Lat:"+location.getLatitude()+"Lng:"+location.getLongitude());
-    				myLat = location.getLatitude()*1E6;
-    				myLng = location.getLongitude()*1E6;
+    				Log.i("gps","Lat:"+location.getLatitude()+"Lng:"+location.getLongitude());
+    				myLat = location.getLatitude();
+    				myLng = location.getLongitude();
+    				String result = "";
+    				try{
+    					result = new AccessToServer().execute(myLat.toString(), myLng.toString(), myTeam).get();
+    				}catch(Exception e){
+    					e.printStackTrace();
+    				}
+    				Toast.makeText(cont, result, Toast.LENGTH_SHORT);
     			}
     	};
 
-    	//쥐피에스로 부터 위치 변경이 올 경우 업데이트 하도록 설정
-    	myLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0, 0, myLocationListener);
-
+    	lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
+    	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
+    	
     	//가장 최근 위치를 저장한다.
-    	myLat = myLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude()*1E6;
-    	myLng = myLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude()*1E6;
-
-    	Log.i("HONEYMAP","LAT:"+myLat.intValue()+
-    			"Lng:"+myLng.intValue());
+    	myLat = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
+    	myLng = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();
 
     	return true;
-    }//get my location
+    }//getMyLocation
+   
+    private class AccessToServer extends AsyncTask<String, Void,String> {
+    	String myLat; 
+    	String myLng;
+    	String myTeam;
+        protected String doInBackground(String ... data) {
+        	myLat = data[0];
+        	myLng = data[1];
+        	myTeam = data[2];
+            return HttpPostData();
+        }
+        private String HttpPostData() {  	
+        	String result = null;
+        	try {
+                HttpPost request = new HttpPost("http://drama.kaist.ac.kr/qr/getLocation.php");
+                Vector<NameValuePair> nameValue = new Vector<NameValuePair>();
+                nameValue.add(new BasicNameValuePair("lat", myLat));
+                nameValue.add(new BasicNameValuePair("long", myLng));
+                nameValue.add(new BasicNameValuePair("team", myTeam));
+                request.setEntity(makeEntity(nameValue));
+                
+                HttpClient client = new DefaultHttpClient();
+                ResponseHandler<String> reshandler = new BasicResponseHandler();
+                result = client.execute(request, reshandler);
+                
+            } catch (MalformedURLException e) {	
+            	e.printStackTrace();
+            } catch (IOException e) {
+        		e.printStackTrace();
+            } catch (Exception e){
+            	e.printStackTrace();
+            }//try
+            return result;
+        } // HttpPostData
+        
 
-
+        private HttpEntity makeEntity(Vector<NameValuePair> $nameValue){
+        	HttpEntity result = null;
+        	try{
+        		result = new UrlEncodedFormEntity($nameValue,HTTP.UTF_8);
+        	} catch (UnsupportedEncodingException e){
+        		e.printStackTrace();
+        	}
+        	return result;
+        }//makeEntity
+    }
 }
 
 
