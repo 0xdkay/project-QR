@@ -1,27 +1,6 @@
 package kr.dkay.qrcoderace;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
-import java.util.Vector;
-
-import org.apache.http.HttpEntity;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.BasicResponseHandler;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
-
 
 import android.app.AlertDialog;
 import android.app.TabActivity;
@@ -34,7 +13,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -54,18 +32,17 @@ public class QrcodeMain extends TabActivity {
 	private boolean isTwoClickBack = false;
 	private ArrayList<String> remainList;
 	private ArrayList<String> solvedList;
+	private ArrayList<String> teamList;
  
 	private TabHost mTabHost;
 	
 	private Double myLat;
 	private Double myLng;
-	private String myTeam = "test";
+	private String myTeam = "";
 	private Context cont = this;
 	
-	private String message;
 	private String deviceID;
 	private String version;
-	private String infotype;
 
 	LocationManager lManager;
 	LocationListener lListener;
@@ -76,7 +53,6 @@ public class QrcodeMain extends TabActivity {
         setContentView(R.layout.main);
         Resources res = getResources();
 
-        
         //setting tabs
         mTabHost = getTabHost();
         mTabHost.addTab(mTabHost.newTabSpec("tab") 
@@ -93,7 +69,7 @@ public class QrcodeMain extends TabActivity {
                 .setContent(R.id.solved)); 
         mTabHost.addTab(mTabHost.newTabSpec("tab") 
                 .setIndicator("setting") 
-                .setContent(R.id.setting)); 
+                .setContent(R.id.setting));
         mTabHost.setCurrentTab(0);
         
         //setting variables related to each tab
@@ -104,36 +80,72 @@ public class QrcodeMain extends TabActivity {
         setting = (ListView)findViewById(R.id.setting);
         
         
-        
         //setting contents in the tabs
-        remainList = new ArrayList<String>();
-        solvedList = new ArrayList<String>();
-        
-        remain.setAdapter(new ArrayAdapter <String> (this,
-                R.layout.listview_layout_probs,
-                remainList));
-        solved.setAdapter(new ArrayAdapter <String> (this,
-                R.layout.listview_layout_probs,
-                solvedList));
-        
-        
         String settingList[] = res.getStringArray(R.array.test);        
         setting.setAdapter(new ArrayAdapter <String> (this,
                 R.layout.listview_layout_probs,
                 settingList));
         
-        getMyLocation();
+        getTeamList();
         
+        setTeam();
+        
+        getMyLocation();
         
         ImageView.OnClickListener adapter = new ImageView.OnClickListener() {
         	@Override
         	public void onClick(View v){
         		lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
             	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
+            	
         	}
         };
         worldMap.setOnClickListener(adapter);
     
+    }
+    
+    void getTeamList(){
+		String result = "";
+		try{
+			result = new AccessToServer().execute("teamlist", myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+
+		AlertDialog.Builder gsDialog = new AlertDialog.Builder(this);
+		gsDialog.setTitle("No Team Name");
+		gsDialog.setMessage(result);
+		gsDialog.setPositiveButton("Go", new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				Intent intent = new Intent(cont, SettingActivity.class);
+				intent.putStringArrayListExtra("teamlist", teamList);
+				intent.addCategory(Intent.CATEGORY_DEFAULT);
+				startActivity(intent);			
+			}
+		});
+		gsDialog.create().show();
+		
+		
+		teamList = parseRes("teamlist", result);
+    }
+    
+    
+    void setTeam(){
+    	if(myTeam==""){
+    		Log.i("teamName", "No Team Name");
+    		AlertDialog.Builder gsDialog = new AlertDialog.Builder(this);
+    		gsDialog.setTitle("No Team Name");
+    		gsDialog.setMessage("Choose your team!");
+    		gsDialog.setPositiveButton("Go", new DialogInterface.OnClickListener() {
+    			public void onClick(DialogInterface dialog, int which) {
+    				Intent intent = new Intent(cont, SettingActivity.class);
+    				intent.putStringArrayListExtra("teamlist", teamList);
+    				intent.addCategory(Intent.CATEGORY_DEFAULT);
+    				startActivity(intent);			
+    			}
+    		});
+    		gsDialog.create().show();
+    	}
     }
     
     @Override
@@ -176,8 +188,6 @@ public class QrcodeMain extends TabActivity {
         }
     }//class CntTimer
    
-    
-    
     
     private boolean getMyLocation(){
     	WifiManager wManage = (WifiManager)getSystemService(WIFI_SERVICE);
@@ -231,12 +241,23 @@ public class QrcodeMain extends TabActivity {
     				myLat = location.getLatitude();
     				myLng = location.getLongitude();
     				String result = "";
+    				String result2 = "";
     				try{
-    					result = new AccessToServer().execute(myLat.toString(), myLng.toString(), myTeam).get();
+    					result = new AccessToServer().execute("solvedlist", myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
+    					result2 = new AccessToServer().execute("remainedlist", myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
     				}catch(Exception e){
     					e.printStackTrace();
     				}
-    				Toast.makeText(cont, result, Toast.LENGTH_SHORT);
+
+    				solvedList = parseRes("solvedlist", result);
+    				remainList = parseRes("remainedlist", result2);
+    				
+    				remain.setAdapter(new ArrayAdapter <String> (cont,
+    						R.layout.listview_layout_probs,
+    			            remainList));
+    			    solved.setAdapter(new ArrayAdapter <String> (cont,
+    			            R.layout.listview_layout_probs,
+    			            solvedList));
     			}
     	};
 
@@ -250,50 +271,14 @@ public class QrcodeMain extends TabActivity {
     	return true;
     }//getMyLocation
    
-    private class AccessToServer extends AsyncTask<String, Void,String> {
-    	String myLat; 
-    	String myLng;
-    	String myTeam;
-        protected String doInBackground(String ... data) {
-        	myLat = data[0];
-        	myLng = data[1];
-        	myTeam = data[2];
-            return HttpPostData();
-        }
-        private String HttpPostData() {  	
-        	String result = null;
-        	try {
-                HttpPost request = new HttpPost("http://drama.kaist.ac.kr/qr/getLocation.php");
-                Vector<NameValuePair> nameValue = new Vector<NameValuePair>();
-                nameValue.add(new BasicNameValuePair("lat", myLat));
-                nameValue.add(new BasicNameValuePair("long", myLng));
-                nameValue.add(new BasicNameValuePair("team", myTeam));
-                request.setEntity(makeEntity(nameValue));
-                
-                HttpClient client = new DefaultHttpClient();
-                ResponseHandler<String> reshandler = new BasicResponseHandler();
-                result = client.execute(request, reshandler);
-                
-            } catch (MalformedURLException e) {	
-            	e.printStackTrace();
-            } catch (IOException e) {
-        		e.printStackTrace();
-            } catch (Exception e){
-            	e.printStackTrace();
-            }//try
-            return result;
-        } // HttpPostData
-        
-
-        private HttpEntity makeEntity(Vector<NameValuePair> $nameValue){
-        	HttpEntity result = null;
-        	try{
-        		result = new UrlEncodedFormEntity($nameValue,HTTP.UTF_8);
-        	} catch (UnsupportedEncodingException e){
-        		e.printStackTrace();
-        	}
-        	return result;
-        }//makeEntity
+    
+    ArrayList<String> parseRes(String mode, String result){
+    	ArrayList<String> tmp = new ArrayList<String>();
+    	String tmp2[] = result.split(",");
+    	for(int i=1; i<tmp2.length; i++){
+    		tmp.add(tmp2[i]);
+    	}
+        return tmp;
     }
 }
 
