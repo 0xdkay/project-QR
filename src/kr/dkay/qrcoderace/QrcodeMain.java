@@ -1,5 +1,10 @@
 package kr.dkay.qrcoderace;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 
 import android.app.AlertDialog;
@@ -87,9 +92,6 @@ public class QrcodeMain extends TabActivity {
                 settingList));
         
         getTeamList();
-        
-        setTeam();
-        
         getMyLocation();
         
         ImageView.OnClickListener adapter = new ImageView.OnClickListener() {
@@ -97,12 +99,33 @@ public class QrcodeMain extends TabActivity {
         	public void onClick(View v){
         		lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
             	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
-            	
+            	getTeamList();
+            	if(myTeam==""){
+            		setTeam();
+            	}else{
+            		Toast.makeText(cont, myTeam, Toast.LENGTH_SHORT).show();
+            	}
         	}
         };
         worldMap.setOnClickListener(adapter);
-    
+        checkUpdate.start();
     }
+    
+    
+    private Thread checkUpdate = new Thread() {
+        public void run() {
+        	
+        	try{
+        		while(true){
+        			lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
+        			lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
+        			Thread.sleep(5000);
+        		}
+        	}catch(Exception e){
+        		e.printStackTrace();
+        	}
+        }
+    };
     
     void getTeamList(){
 		String result = "";
@@ -111,40 +134,32 @@ public class QrcodeMain extends TabActivity {
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-
-		AlertDialog.Builder gsDialog = new AlertDialog.Builder(this);
-		gsDialog.setTitle("No Team Name");
-		gsDialog.setMessage(result);
-		gsDialog.setPositiveButton("Go", new DialogInterface.OnClickListener() {
-			public void onClick(DialogInterface dialog, int which) {
-				Intent intent = new Intent(cont, SettingActivity.class);
-				intent.putStringArrayListExtra("teamlist", teamList);
-				intent.addCategory(Intent.CATEGORY_DEFAULT);
-				startActivity(intent);			
-			}
-		});
-		gsDialog.create().show();
-		
-		
 		teamList = parseRes("teamlist", result);
     }
     
-    
     void setTeam(){
-    	if(myTeam==""){
-    		Log.i("teamName", "No Team Name");
-    		AlertDialog.Builder gsDialog = new AlertDialog.Builder(this);
-    		gsDialog.setTitle("No Team Name");
-    		gsDialog.setMessage("Choose your team!");
-    		gsDialog.setPositiveButton("Go", new DialogInterface.OnClickListener() {
-    			public void onClick(DialogInterface dialog, int which) {
-    				Intent intent = new Intent(cont, SettingActivity.class);
-    				intent.putStringArrayListExtra("teamlist", teamList);
-    				intent.addCategory(Intent.CATEGORY_DEFAULT);
-    				startActivity(intent);			
-    			}
-    		});
-    		gsDialog.create().show();
+   		AlertDialog.Builder gsDialog = new AlertDialog.Builder(this);
+   		gsDialog.setTitle("No Team Name");
+   		gsDialog.setMessage("Choose your team.");
+   		gsDialog.setPositiveButton("Go", new DialogInterface.OnClickListener() {
+   			public void onClick(DialogInterface dialog, int which) {
+   				Intent intent = new Intent(cont, SettingActivity.class);
+   				intent.putStringArrayListExtra("teamlist", teamList);
+   				intent.addCategory(Intent.CATEGORY_DEFAULT);
+   				startActivityForResult(intent, 1);			
+   			}
+   		});
+   		gsDialog.create().show();
+    }
+    
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+    	super.onActivityResult(requestCode, resultCode, data);
+    	if(resultCode==RESULT_OK) // 액티비티가 정상적으로 종료되었을 경우
+    	{
+    		if(requestCode==1) // InformationInput에서 호출한 경우에만 처리합니다.
+    		{               // 받아온 이름과 전화번호를 InformationInput 액티비티에 표시합니다.
+    			myTeam = data.getStringExtra("team_name");
+    		}
     	}
     }
     
@@ -237,7 +252,6 @@ public class QrcodeMain extends TabActivity {
     		//위치 정보가 변경 됐을 때 위치 정보를 가져온다.
     		@Override
     			public void onLocationChanged(Location location) {
-    				Log.i("gps","Lat:"+location.getLatitude()+"Lng:"+location.getLongitude());
     				myLat = location.getLatitude();
     				myLng = location.getLongitude();
     				String result = "";
