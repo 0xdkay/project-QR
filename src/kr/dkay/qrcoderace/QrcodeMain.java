@@ -102,9 +102,26 @@ public class QrcodeMain extends TabActivity {
             	getTeamList();
             	if(myTeam==""){
             		setTeam();
-            	}else{
-            		Toast.makeText(cont, myTeam, Toast.LENGTH_SHORT).show();
             	}
+            	
+				String result = "";
+				String result2 = "";
+				try{
+					result = new AccessToServer().execute("solvedlist", myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
+					result2 = new AccessToServer().execute("remainedlist", myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+
+				solvedList = parseRes("solvedlist", result);
+				remainList = parseRes("remainedlist", result2);
+				
+				remain.setAdapter(new ArrayAdapter <String> (cont,
+						android.R.layout.simple_list_item_1,
+			            remainList));
+			    solved.setAdapter(new ArrayAdapter <String> (cont,
+			            android.R.layout.simple_list_item_1,
+			            solvedList));
         	}
         };
         worldMap.setOnClickListener(adapter);
@@ -254,24 +271,6 @@ public class QrcodeMain extends TabActivity {
     			public void onLocationChanged(Location location) {
     				myLat = location.getLatitude();
     				myLng = location.getLongitude();
-    				String result = "";
-    				String result2 = "";
-    				try{
-    					result = new AccessToServer().execute("solvedlist", myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
-    					result2 = new AccessToServer().execute("remainedlist", myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
-    				}catch(Exception e){
-    					e.printStackTrace();
-    				}
-
-    				solvedList = parseRes("solvedlist", result);
-    				remainList = parseRes("remainedlist", result2);
-    				
-    				remain.setAdapter(new ArrayAdapter <String> (cont,
-    						R.layout.listview_layout_probs,
-    			            remainList));
-    			    solved.setAdapter(new ArrayAdapter <String> (cont,
-    			            R.layout.listview_layout_probs,
-    			            solvedList));
     			}
     	};
 
