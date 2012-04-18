@@ -27,7 +27,7 @@ public class SettingActivity extends ListActivity {
 		setContentView(R.layout.team_name_setting);
 
 		final Intent intent = getIntent(); // 이 액티비티를 시작하게 한 인텐트를 호출
-		Toast.makeText(this, intent.getStringArrayListExtra("teamlist").toString(), Toast.LENGTH_SHORT).show();
+	
 		teamlist = (ListView)findViewById(android.R.id.list);
 	    teamlist.setAdapter(new ArrayAdapter <String> (this,
 	            android.R.layout.simple_list_item_1,

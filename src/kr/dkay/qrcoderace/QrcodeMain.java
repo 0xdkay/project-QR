@@ -44,7 +44,7 @@ public class QrcodeMain extends TabActivity {
 	private Double myLat;
 	private Double myLng;
 	private String myTeam = "";
-	private Context cont = this;
+	private Context cont;
 	
 	private String deviceID;
 	private String version;
@@ -57,6 +57,7 @@ public class QrcodeMain extends TabActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         Resources res = getResources();
+        cont = this;
 
         //setting tabs
         mTabHost = getTabHost();
@@ -88,10 +89,10 @@ public class QrcodeMain extends TabActivity {
         //setting contents in the tabs
         String settingList[] = res.getStringArray(R.array.test);        
         setting.setAdapter(new ArrayAdapter <String> (this,
-                R.layout.listview_layout_probs,
+                android.R.layout.simple_list_item_1,
                 settingList));
-        
-        getTeamList();
+      
+        teamList = getListFromServer("teamlist");
         getMyLocation();
         
         ImageView.OnClickListener adapter = new ImageView.OnClickListener() {
@@ -99,22 +100,15 @@ public class QrcodeMain extends TabActivity {
         	public void onClick(View v){
         		lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
             	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
-            	getTeamList();
+            	
+            	teamList = getListFromServer("teamlist");
             	if(myTeam==""){
             		setTeam();
             	}
-            	
-				String result = "";
-				String result2 = "";
-				try{
-					result = new AccessToServer().execute("solvedlist", myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
-					result2 = new AccessToServer().execute("remainedlist", myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
-				}catch(Exception e){
-					e.printStackTrace();
-				}
+            	Toast.makeText(cont, myTeam, Toast.LENGTH_SHORT);
 
-				solvedList = parseRes("solvedlist", result);
-				remainList = parseRes("remainedlist", result2);
+				solvedList = getListFromServer("solvedlist");
+				remainList = getListFromServer("remainedlist");
 				
 				remain.setAdapter(new ArrayAdapter <String> (cont,
 						android.R.layout.simple_list_item_1,
@@ -144,14 +138,23 @@ public class QrcodeMain extends TabActivity {
         }
     };
     
-    void getTeamList(){
+    ArrayList<String> getListFromServer(String a){
 		String result = "";
 		try{
-			result = new AccessToServer().execute("teamlist", myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
+			result = new AccessToServer().execute(a, myLat.toString(), myLng.toString(), myTeam, deviceID, version).get();
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		teamList = parseRes("teamlist", result);
+		return parseRes(a, result);
+    }
+    
+    ArrayList<String> parseRes(String mode, String result){
+    	ArrayList<String> tmp = new ArrayList<String>();
+    	String tmp2[] = result.split(",");
+    	for(int i=1; i<tmp2.length-1; i++){
+    		tmp.add(tmp2[i]);
+    	}
+        return tmp;
     }
     
     void setTeam(){
@@ -210,12 +213,10 @@ public class QrcodeMain extends TabActivity {
         }
         @Override
         public void onFinish() {
-        	// TODO Auto-generated method stub
         	isTwoClickBack = false;
         }
         @Override
         public void onTick(long millisUntilFinished) {
-        	// TODO Auto-generated method stub
         	Log.i("Test"," isTwoClickBack " + isTwoClickBack);
         }
     }//class CntTimer
@@ -229,7 +230,6 @@ public class QrcodeMain extends TabActivity {
     	
     	//GPS가 켜져있는지 확인한다.
     	lManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-
     	Location loc = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
     	
     	
@@ -284,15 +284,6 @@ public class QrcodeMain extends TabActivity {
     	return true;
     }//getMyLocation
    
-    
-    ArrayList<String> parseRes(String mode, String result){
-    	ArrayList<String> tmp = new ArrayList<String>();
-    	String tmp2[] = result.split(",");
-    	for(int i=1; i<tmp2.length; i++){
-    		tmp.add(tmp2[i]);
-    	}
-        return tmp;
-    }
 }
 
 
