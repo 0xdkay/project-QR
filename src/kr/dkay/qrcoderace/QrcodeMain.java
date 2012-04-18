@@ -37,9 +37,9 @@ public class QrcodeMain extends TabActivity {
  
 	private TabHost mTabHost;
 	
-	private Double myLat;
-	private Double myLng;
-	private String myTeam = "";
+	private Double myLat = null;
+	private Double myLng = null;
+	private String myTeam = null;
 	private Context cont;
 	
 	private String deviceID;
@@ -89,39 +89,29 @@ public class QrcodeMain extends TabActivity {
                 settingList));
       
         teamList = getListFromServer("teamlist");
-        getMyLocation();
+        if(myTeam==null){
+    		setTeam();
+    	}        
         
+        getMyLocation();
+        checkUpdate.start();
+        
+  
         ImageView.OnClickListener adapter = new ImageView.OnClickListener() {
         	@Override
         	public void onClick(View v){
-        		lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
-            	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
-            	
-            	teamList = getListFromServer("teamlist");
-            	if(myTeam==""){
-            		setTeam();
-            	}
-            	Toast.makeText(cont, myTeam, Toast.LENGTH_SHORT);
-
-				solvedList = getListFromServer("solvedlist");
-				remainList = getListFromServer("remainedlist");
-				
-				remain.setAdapter(new ArrayAdapter <String> (cont,
-						android.R.layout.simple_list_item_1,
-			            remainList));
-			    solved.setAdapter(new ArrayAdapter <String> (cont,
-			            android.R.layout.simple_list_item_1,
-			            solvedList));
+//        		lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
+//            	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
+        		Toast.makeText(cont, myTeam, Toast.LENGTH_SHORT).show();
         	}
         };
         worldMap.setOnClickListener(adapter);
-        checkUpdate.start();
+        
+
     }
-    
     
     private Thread checkUpdate = new Thread() {
         public void run() {
-        	
         	try{
         		while(true){
         			lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
@@ -173,7 +163,7 @@ public class QrcodeMain extends TabActivity {
     	if(resultCode==RESULT_OK) // 액티비티가 정상적으로 종료되었을 경우
     	{
     		if(requestCode==1) // InformationInput에서 호출한 경우에만 처리합니다.
-    		{               // 받아온 이름과 전화번호를 InformationInput 액티비티에 표시합니다.
+    		{               
     			myTeam = data.getStringExtra("team_name");
     		}
     	}
@@ -226,10 +216,40 @@ public class QrcodeMain extends TabActivity {
     	
     	//GPS가 켜져있는지 확인한다.
     	lManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-    	Location loc = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+    	lListener = new LocationListener() {
+    		@Override
+    			public void onStatusChanged(String provider, int status, Bundle extras) {
+    			}
+    		@Override
+    			public void onProviderEnabled(String provider) {
+    			}
+    		@Override
+    			public void onProviderDisabled(String provider) {
+    			}
+    		//위치 정보가 변경 됐을 때 위치 정보를 가져온다.
+    		@Override
+    			public void onLocationChanged(Location location) {
+    				myLat = location.getLatitude();
+    				myLng = location.getLongitude();
+
+    				teamList = getListFromServer("teamlist");
+    				solvedList = getListFromServer("solvedlist");
+    				remainList = getListFromServer("remainedlist");
+    				
+    				remain.setAdapter(new ArrayAdapter <String> (cont,
+    						android.R.layout.simple_list_item_1,
+    			            remainList));
+    			    solved.setAdapter(new ArrayAdapter <String> (cont,
+    			            android.R.layout.simple_list_item_1,
+    			            solvedList));
+
+    			}
+    	};
+
+    	lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
+    	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
     	
-    	
-    	if(loc == null)
+    	if(lManager == null || lListener == null || !LocationManager.GPS_PROVIDER.equals("gps"))
     	{
     		Log.i("Worldmap", "GPS OFF");
     		AlertDialog.Builder gsDialog = new AlertDialog.Builder(this);
@@ -250,28 +270,6 @@ public class QrcodeMain extends TabActivity {
     		gsDialog.create().show();
     		return false;
     	}
-    	
-    	
-    	lListener = new LocationListener() {
-    		@Override
-    			public void onStatusChanged(String provider, int status, Bundle extras) {
-    			}
-    		@Override
-    			public void onProviderEnabled(String provider) {
-    			}
-    		@Override
-    			public void onProviderDisabled(String provider) {
-    			}
-    		//위치 정보가 변경 됐을 때 위치 정보를 가져온다.
-    		@Override
-    			public void onLocationChanged(Location location) {
-    				myLat = location.getLatitude();
-    				myLng = location.getLongitude();
-    			}
-    	};
-
-    	lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
-    	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
     	
     	//가장 최근 위치를 저장한다.
     	myLat = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
