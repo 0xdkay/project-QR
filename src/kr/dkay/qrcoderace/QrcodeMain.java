@@ -2,8 +2,9 @@ package kr.dkay.qrcoderace;
 
 
 import java.util.ArrayList;
-
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.app.TabActivity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -23,6 +24,12 @@ import android.widget.*;
 
 public class QrcodeMain extends TabActivity {
 	/** Called when the activity is first created. */
+    static final int PROGRESS_DIALOG = 0; 
+    ProgressThread progressThread; 
+    ProgressDialog progressDialog; 
+
+	
+	
 	
 	private ImageView worldMap;
 	private TextView about;
@@ -33,13 +40,13 @@ public class QrcodeMain extends TabActivity {
 	private boolean isTwoClickBack = false;
 	private ArrayList<String> remainList;
 	private ArrayList<String> solvedList;
-	private ArrayList<String> teamList;
+	private ArrayList<String> teamList = null;
  
 	private TabHost mTabHost;
 	
-	private Double myLat = null;
-	private Double myLng = null;
-	private String myTeam = null;
+	private Double myLat = 0.0;
+	private Double myLng = 0.0;
+	private String myTeam = "";
 	private Context cont;
 	
 	private String deviceID;
@@ -87,21 +94,23 @@ public class QrcodeMain extends TabActivity {
         setting.setAdapter(new ArrayAdapter <String> (this,
                 android.R.layout.simple_list_item_1,
                 settingList));
-      
+        
+        
+        WifiManager wManage = (WifiManager)getSystemService(WIFI_SERVICE);
+        WifiInfo wInfo = wManage.getConnectionInfo();
+        deviceID = wInfo.getMacAddress();
+    	version = Build.ID;
         teamList = getListFromServer("teamlist");
-        if(myTeam==null){
-    		setTeam();
+        if(myTeam==""){
+       		setTeam();
     	}        
         
         getMyLocation();
         checkUpdate.start();
         
-  
         ImageView.OnClickListener adapter = new ImageView.OnClickListener() {
         	@Override
         	public void onClick(View v){
-//        		lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
-//            	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
         		Toast.makeText(cont, myTeam, Toast.LENGTH_SHORT).show();
         	}
         };
@@ -209,11 +218,6 @@ public class QrcodeMain extends TabActivity {
    
     
     private boolean getMyLocation(){
-    	WifiManager wManage = (WifiManager)getSystemService(WIFI_SERVICE);
-        WifiInfo wInfo = wManage.getConnectionInfo();
-        deviceID = wInfo.getMacAddress();
-    	version = Build.ID;
-    	
     	//GPS가 켜져있는지 확인한다.
     	lManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
     	lListener = new LocationListener() {
@@ -242,12 +246,12 @@ public class QrcodeMain extends TabActivity {
     			    solved.setAdapter(new ArrayAdapter <String> (cont,
     			            android.R.layout.simple_list_item_1,
     			            solvedList));
-
     			}
     	};
 
-    	lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,lListener);
-    	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,0,0,lListener);
+    	lManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, lListener);
+    	lManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, lListener);
+    	
     	
     	if(lManager == null || lListener == null || !LocationManager.GPS_PROVIDER.equals("gps"))
     	{
@@ -271,13 +275,51 @@ public class QrcodeMain extends TabActivity {
     		return false;
     	}
     	
-    	//가장 최근 위치를 저장한다.
-    	myLat = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
-    	myLng = lManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();
-
     	return true;
     }//getMyLocation
    
+        /** Called when the activity is first created. */ 
+        protected Dialog onCreateDialog(int id) { 
+        	switch(id) { 
+        	case PROGRESS_DIALOG: 
+        		progressDialog = new
+        		ProgressDialog(this); 
+        		progressDialog.setMessage("Loading..."); 
+        		progressDialog.setIndeterminate(true); 
+                progressThread = new ProgressThread(); 
+                progressThread.start(); 
+                return progressDialog; 
+            default: 
+            	return null; 
+            } 
+        } 
+        
+        /** Nested class that performs progress calculations (counting) */ 
+        private class ProgressThread extends Thread { 
+            final static int STATE_DONE = 0; 
+            final static int STATE_RUNNING = 1; 
+            int mState; 
+            ProgressThread() {
+            } 
+            public void run() { 
+                mState = STATE_RUNNING; 
+                //total = 0; 
+                while (mState == STATE_RUNNING) { 
+                    try { 
+                        Thread.sleep(100); 
+                    } catch (InterruptedException e) { 
+                        Log.e("ERROR", "Thread Interrupted"); 
+                    } 
+                    
+                    try {
+                    	teamList.size();
+                    	mState = STATE_DONE;
+                    } catch (Exception e){
+                    	
+                    }
+                } 
+            } 
+        } 
 }
 
 

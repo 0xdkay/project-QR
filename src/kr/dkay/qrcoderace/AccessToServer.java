@@ -44,6 +44,7 @@ public class AccessToServer extends AsyncTask<String, Void,String> {
     	String result = null;
     	try {
             HttpPost request = new HttpPost("http://drama.kaist.ac.kr/qr/getLocation.php");
+            
             Vector<NameValuePair> nameValue = new Vector<NameValuePair>();
             nameValue.add(new BasicNameValuePair("mode", mode));
             nameValue.add(new BasicNameValuePair("lat", myLat));
