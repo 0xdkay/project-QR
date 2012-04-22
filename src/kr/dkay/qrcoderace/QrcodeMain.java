@@ -3,8 +3,6 @@ package kr.dkay.qrcoderace;
 
 import java.util.ArrayList;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.app.TabActivity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -21,17 +19,11 @@ import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.*;
 import android.widget.*;
+import android.widget.TabHost.TabSpec;
 
 public class QrcodeMain extends TabActivity {
 	/** Called when the activity is first created. */
-    static final int PROGRESS_DIALOG = 0; 
-    ProgressThread progressThread; 
-    ProgressDialog progressDialog; 
-
 	
-	
-	
-	private ImageView worldMap;
 	private TextView about;
 	private ListView remain;
 	private ListView solved;
@@ -61,12 +53,18 @@ public class QrcodeMain extends TabActivity {
         setContentView(R.layout.main);
         Resources res = getResources();
         cont = this;
-
+        
+        
         //setting tabs
-        mTabHost = getTabHost();
-        mTabHost.addTab(mTabHost.newTabSpec("tab") 
-        		.setIndicator("worldmap") 
-        		.setContent(R.id.worldmap)); 
+        mTabHost = getTabHost();        
+        
+        TabSpec tabSpec = mTabHost.newTabSpec("tab");
+        tabSpec.setIndicator("worldmap");
+        Context ctx = this.getApplicationContext();
+        Intent i = new Intent(ctx, TmpMapActivity.class);
+        tabSpec.setContent(i);
+        mTabHost.addTab(tabSpec);
+
         mTabHost.addTab(mTabHost.newTabSpec("tab") 
         		.setIndicator("about") 
         		.setContent(R.id.about)); 
@@ -80,14 +78,16 @@ public class QrcodeMain extends TabActivity {
                 .setIndicator("setting") 
                 .setContent(R.id.setting));
         mTabHost.setCurrentTab(0);
-        
         //setting variables related to each tab
-        worldMap = (ImageView)findViewById(R.id.worldmap);
+        
+        
+        myLat = 36.368023;
+        myLng = 127.365446;
+        
         about = (TextView)findViewById(R.id.about);
         solved = (ListView)findViewById(R.id.solved);
         remain = (ListView)findViewById(R.id.remain);
         setting = (ListView)findViewById(R.id.setting);
-        
         
         //setting contents in the tabs
         String settingList[] = res.getStringArray(R.array.test);        
@@ -108,6 +108,7 @@ public class QrcodeMain extends TabActivity {
         getMyLocation();
         checkUpdate.start();
         
+        /*
         ImageView.OnClickListener adapter = new ImageView.OnClickListener() {
         	@Override
         	public void onClick(View v){
@@ -115,7 +116,7 @@ public class QrcodeMain extends TabActivity {
         	}
         };
         worldMap.setOnClickListener(adapter);
-        
+        */
 
     }
     
@@ -277,49 +278,6 @@ public class QrcodeMain extends TabActivity {
     	
     	return true;
     }//getMyLocation
-   
-        /** Called when the activity is first created. */ 
-        protected Dialog onCreateDialog(int id) { 
-        	switch(id) { 
-        	case PROGRESS_DIALOG: 
-        		progressDialog = new
-        		ProgressDialog(this); 
-        		progressDialog.setMessage("Loading..."); 
-        		progressDialog.setIndeterminate(true); 
-                progressThread = new ProgressThread(); 
-                progressThread.start(); 
-                return progressDialog; 
-            default: 
-            	return null; 
-            } 
-        } 
-        
-        /** Nested class that performs progress calculations (counting) */ 
-        private class ProgressThread extends Thread { 
-            final static int STATE_DONE = 0; 
-            final static int STATE_RUNNING = 1; 
-            int mState; 
-            ProgressThread() {
-            } 
-            public void run() { 
-                mState = STATE_RUNNING; 
-                //total = 0; 
-                while (mState == STATE_RUNNING) { 
-                    try { 
-                        Thread.sleep(100); 
-                    } catch (InterruptedException e) { 
-                        Log.e("ERROR", "Thread Interrupted"); 
-                    } 
-                    
-                    try {
-                    	teamList.size();
-                    	mState = STATE_DONE;
-                    } catch (Exception e){
-                    	
-                    }
-                } 
-            } 
-        } 
 }
 
 

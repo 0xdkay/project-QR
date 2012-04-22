@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+    <com.google.android.maps.MapView 
+  				android:id="@+id/worldmap"
+  				android:layout_width="fill_parent"
+  				android:layout_height="fill_parent"
+  				android:clickable="true" 
+  				android:apiKey="08eD1_C8FDL88z5pjbsZIblHtB-t0mjlP-OP3vg" />
+</LinearLayout>

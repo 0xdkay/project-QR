@@ -16,20 +16,17 @@
            	android:layout_width="fill_parent" 
            	android:layout_height="fill_parent">
            
-           	<ImageView
-        		android:id="@+id/worldmap"
-        		android:layout_width="fill_parent"
-        		android:layout_height="fill_parent"
-	        	android:contentDescription="@string/desc"
-    	    	android:src="@drawable/ic_launcher" />
- 
+       		<RelativeLayout 
+       		    android:id="@+id/empty" 
+       		    android:orientation="vertical"
+             	android:layout_width="fill_parent" 
+             	android:layout_height="fill_parent"/>
            	<TextView
       	        android:id="@+id/about"
         		android:layout_width="fill_parent"
         		android:layout_height="fill_parent"
 	        	android:text="@string/about"
                	/>
-           	
 			<ListView 
                android:id="@+id/remain" 
                android:layout_width="fill_parent" 
