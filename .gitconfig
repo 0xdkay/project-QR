@@ -1,0 +1,5 @@
+[user]
+	name = Dongkwan Kim
+	email = insinoa@gmail.com
+[core]
+	excludesfile = .gitignore

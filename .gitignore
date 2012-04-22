@@ -1,9 +1,8 @@
-/gen
-/bin
-
+gen/
+bin/
 *.apk
 *.ap_
 *.dex
 *.class
+AndroidManifest.xml
 
-local.properties
