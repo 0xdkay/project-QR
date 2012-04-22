@@ -81,6 +81,7 @@ public class QrcodeMain extends TabActivity {
         //setting variables related to each tab
         
         
+        
         myLat = 36.368023;
         myLng = 127.365446;
         
@@ -159,7 +160,7 @@ public class QrcodeMain extends TabActivity {
    		gsDialog.setMessage("Choose your team.");
    		gsDialog.setPositiveButton("Go", new DialogInterface.OnClickListener() {
    			public void onClick(DialogInterface dialog, int which) {
-   				Intent intent = new Intent(cont, SettingActivity.class);
+   		        Intent intent = new Intent(cont, SettingActivity.class);
    				intent.putStringArrayListExtra("teamlist", teamList);
    				intent.addCategory(Intent.CATEGORY_DEFAULT);
    				startActivityForResult(intent, 1);			

@@ -27,14 +27,14 @@
             </intent-filter>
         </activity>
         
-        <activity android:name=".SettingActivity" android:label="Team Setting" >
-            <intent-filter>
-          		<action android:name="android.intent.action.MAIN"></action>
-          		<category android:name="android.intent.category.EMBED"></category>
-       		</intent-filter>
+        <activity 
+            android:name=".SettingActivity" 
+            android:label="Team Setting" >
         </activity>
         
-	    <activity android:name=".TmpMapActivity" android:label="World Map">
+	    <activity 
+	        android:name=".TmpMapActivity" 
+	        android:label="World Map">
        		<intent-filter>
           		<action android:name="android.intent.action.MAIN"></action>
           		<category android:name="android.intent.category.EMBED"></category>

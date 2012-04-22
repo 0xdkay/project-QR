@@ -30,7 +30,7 @@ public class TmpMapActivity extends MapActivity {
         myLat = 36.368023;
         myLng = 127.365446;
     	worldMap.getController().setCenter(new GeoPoint((int)(myLat*1E6), (int)(myLng*1E6)));
-    	worldMap.getController().setZoom(16);  // 얼마나 떙겨서 볼 것인지
+    	worldMap.getController().setZoom(18);  // 얼마나 떙겨서 볼 것인지
     	marker.setBounds(0, 0, marker.getIntrinsicWidth(), marker.getIntrinsicHeight()); // 크기조절
     	worldMap.getOverlays().add(new MyOverlay(marker, myLat, myLng)); // 마커 그려줄 클래스로 넘긴다.
     	worldMap.getOverlays().add(me);
