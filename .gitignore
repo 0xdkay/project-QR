@@ -1,8 +1,0 @@
-gen/
-bin/
-*.apk
-*.ap_
-*.dex
-*.class
-AndroidManifest.xml
-
